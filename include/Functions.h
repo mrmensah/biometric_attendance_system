@@ -4,7 +4,7 @@
 
 //Structs usage
 Variables var;
-
+//LCD definition
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 #if (defined(__AVR__) || defined(ESP8266)) && !defined(__AVR_ATmega2560__)
