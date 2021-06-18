@@ -6,3 +6,4 @@ void getFingerprintIDRecog();
 void successNotify(int, String);
 void failNotity(int, String);
 void printHex(int num, int precision);
+void Reset();

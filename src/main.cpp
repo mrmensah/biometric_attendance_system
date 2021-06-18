@@ -1,6 +1,5 @@
 #include "Libraries.h"
 #include "Prototypes.h"
-// #include "Variables.h"
 #include "Functions.h"
 
 void setup()
@@ -21,7 +20,6 @@ void setup()
   var.id = EEPROM.read(0);
 
   Serial.begin(9600);
-  // while (!Serial);  // For Yun/Leo/Micro/Zero/...
   delay(100);
   Serial.println("\n\nAdafruit Fingerprint sensor enrollment");
 
@@ -71,7 +69,7 @@ void loop()
   reg = digitalRead(REGISTER);
   if (reg == HIGH)
   {
-    // This funtion is responsible for registering new members
+    // This function is responsible for registering new members
     Serial.println("Ready to enroll a fingerprint!");
     Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
     // id = readnumber();
@@ -105,5 +103,10 @@ void loop()
       downloadFingerprintTemplate(finger);
     }
     failNotity(100, "Failed to register");
+  }
+
+  if (auth == HIGH && reg == HIGH)
+  {
+    Reset();
   }
 }

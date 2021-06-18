@@ -201,13 +201,13 @@ uint8_t downloadFingerprintTemplate(uint16_t id)
 {
     Serial.println("------------------------------------");
     Serial.print("Attempting to load #");
-    Serial.println(id);
+    Serial.println(var.id);
     uint8_t p = finger.loadModel(id);
     switch (p)
     {
     case FINGERPRINT_OK:
         Serial.print("Template ");
-        Serial.print(id);
+        Serial.print(var.id);
         Serial.println(" loaded");
         break;
     case FINGERPRINT_PACKETRECIEVEERR:
@@ -228,7 +228,7 @@ uint8_t downloadFingerprintTemplate(uint16_t id)
     {
     case FINGERPRINT_OK:
         Serial.print("Template ");
-        Serial.print(id);
+        Serial.print(var.id);
         Serial.println(" transferring:");
         break;
     default:
@@ -352,4 +352,9 @@ void printHex(int num, int precision)
 
     sprintf(tmp, format, num);
     Serial.print(tmp);
+}
+
+void Reset(){
+    finger.emptyDatabase();
+    lcd.print("Reset Complete");
 }

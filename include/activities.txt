@@ -1,0 +1,6 @@
+What is left to do
+
+1. Verify the fingerprint the second time to ensure that they match.
+2. Check if fingerprint exits already
+3. Make sure id doesn't change when the device restarts
+4. Function to retrieve and send fingerprint data.
