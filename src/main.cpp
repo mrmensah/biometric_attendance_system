@@ -14,10 +14,10 @@ void setup()
   //initialize the LCD
   lcd.begin();
   lcd.backlight(); // turning on the lcd backlight
-  lcd.print("Hello Meow");
+  lcd.print("Hello Welcome");
 
   //Reading from EEPROM
-  var.id = EEPROM.read(0);
+  // var.id = EEPROM.read(0);
 
   Serial.begin(9600);
   delay(100);
@@ -39,11 +39,6 @@ void setup()
     }
   }
 
-  // Try to get the templates for fingers 1 through 10
-  // for (int finger = 1; finger < 10; finger++) {
-  //   downloadFingerprintTemplate(finger);
-  // }
-
   // Get fingerprint sensor details
   Serial.println(F("Reading sensor parameters"));
   finger.getParameters();
@@ -61,6 +56,49 @@ void setup()
   Serial.println(finger.packet_len);
   Serial.print(F("Baud rate: "));
   Serial.println(finger.baud_rate);
+
+  // Initializing WiFi connection
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  Serial.print("Connecting to WiFi...       ");
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  lcd.setCursor(0, 0);
+  lcd.print("WiFi connected          ");
+  lcd.setCursor(0, 1);
+  lcd.print("IP:");
+  lcd.setCursor(4, 1);
+  lcd.print(WiFi.localIP());
+
+  delay(1500);
+
+  // count fingerprints available
+  finger.getTemplateCount();
+
+  if (finger.templateCount == 0)
+  {
+    Serial.print("Sensor doesn't contain any fingerprint data. Please run the 'enroll' example.");
+  }
+  else
+  {
+    Serial.println("Waiting for valid finger...");
+    Serial.print("Sensor contains ");
+    Serial.print(finger.templateCount);
+    Serial.println(" templates");
+  }
 }
 
 void loop()
@@ -72,9 +110,9 @@ void loop()
     // This function is responsible for registering new members
     Serial.println("Ready to enroll a fingerprint!");
     Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
-    // id = readnumber();
+    var.id = readnumber();
     // readnumber();
-    var.id += 1;
+    // var.id += 1;
 
     if (var.id == 0)
     { // ID #0 not allowed, try again!
@@ -86,7 +124,7 @@ void loop()
 
     while (!getFingerprintEnroll())
       ;
-    EEPROM.write(0, var.id);
+    // EEPROM.write(0, var.id);
     lcd.clear();
     lcd.print("User ");
     lcd.print(var.id);
@@ -94,15 +132,11 @@ void loop()
     delay(3000);
     successNotify(100, "Registered");
   }
-  // testing failure
+  // getting user data
   int auth = digitalRead(AUTHENTICATE);
   if (auth == HIGH)
   {
-    for (int finger = 1; finger < 10; finger++)
-    {
-      downloadFingerprintTemplate(finger);
-    }
-    failNotity(100, "Failed to register");
+    getUserData();
   }
 
   if (auth == HIGH && reg == HIGH)

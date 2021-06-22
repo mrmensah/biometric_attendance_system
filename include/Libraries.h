@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <EEPROM.h>
+#include <ESP8266WiFi.h>
 
 #ifndef PROTOTYPES_H
 #define PROTOTYPES_H
