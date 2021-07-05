@@ -17,7 +17,7 @@ void setup()
   lcd.print("Hello Welcome");
 
   //Reading from EEPROM
-  // var.id = EEPROM.read(0);
+  var.id = EEPROM.read(0);
 
   Serial.begin(9600);
   delay(100);
@@ -58,32 +58,7 @@ void setup()
   Serial.println(finger.baud_rate);
 
   // Initializing WiFi connection
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  Serial.print("Connecting to WiFi...       ");
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  lcd.setCursor(0, 0);
-  lcd.print("WiFi connected          ");
-  lcd.setCursor(0, 1);
-  lcd.print("IP:");
-  lcd.setCursor(4, 1);
-  lcd.print(WiFi.localIP());
-
-  delay(1500);
+  connectWiFi();
 
   // count fingerprints available
   finger.getTemplateCount();
@@ -103,6 +78,7 @@ void setup()
 
 void loop()
 {
+  // Enroll new User
   int reg = 0;
   reg = digitalRead(REGISTER);
   if (reg == HIGH)
@@ -110,9 +86,9 @@ void loop()
     // This function is responsible for registering new members
     Serial.println("Ready to enroll a fingerprint!");
     Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
-    var.id = readnumber();
+    // var.id = readnumber();
     // readnumber();
-    // var.id += 1;
+    var.id += 1;
 
     if (var.id == 0)
     { // ID #0 not allowed, try again!
@@ -124,7 +100,7 @@ void loop()
 
     while (!getFingerprintEnroll())
       ;
-    // EEPROM.write(0, var.id);
+    EEPROM.write(0, var.id);
     lcd.clear();
     lcd.print("User ");
     lcd.print(var.id);
@@ -132,6 +108,15 @@ void loop()
     delay(3000);
     successNotify(100, "Registered");
   }
+
+  // Get fingerprint ID
+
+  // Display fingerprint ID
+
+  // Add fingerprint ID to the Database
+
+  // Delete fingerprint ID from the Database
+
   // getting user data
   int auth = digitalRead(AUTHENTICATE);
   if (auth == HIGH)

@@ -274,94 +274,188 @@ void numberOfFingers()
     }
 }
 
-uint8_t getFingerprintID()
+// uint8_t getFingerprintID()
+// {
+//     uint8_t p = -1;
+//     while (p != FINGERPRINT_OK)
+//     {
+//         uint8_t p = finger.getImage();
+//         switch (p)
+//         {
+//         case FINGERPRINT_OK:
+//             Serial.println("Image taken");
+//             break;
+//         case FINGERPRINT_NOFINGER:
+//             Serial.println("No finger detected");
+//             return p;
+//         case FINGERPRINT_PACKETRECIEVEERR:
+//             Serial.println("Communication error");
+//             return p;
+//         case FINGERPRINT_IMAGEFAIL:
+//             Serial.println("Imaging error");
+//             return p;
+//         default:
+//             Serial.println("Unknown error");
+//             return p;
+//         }
+//     }
+//     // OK success!
+
+//     p = finger.image2Tz();
+//     switch (p)
+//     {
+//     case FINGERPRINT_OK:
+//         Serial.println("Image converted");
+//         break;
+//     case FINGERPRINT_IMAGEMESS:
+//         Serial.println("Image too messy");
+//         return p;
+//     case FINGERPRINT_PACKETRECIEVEERR:
+//         Serial.println("Communication error");
+//         return p;
+//     case FINGERPRINT_FEATUREFAIL:
+//         Serial.println("Could not find fingerprint features");
+//         return p;
+//     case FINGERPRINT_INVALIDIMAGE:
+//         Serial.println("Could not find fingerprint features");
+//         return p;
+//     default:
+//         Serial.println("Unknown error");
+//         return p;
+//     }
+
+//     // OK converted!
+//     p = finger.fingerSearch();
+//     if (p == FINGERPRINT_OK)
+//     {
+//         Serial.println("Found a print match!");
+//     }
+//     else if (p == FINGERPRINT_PACKETRECIEVEERR)
+//     {
+//         Serial.println("Communication error");
+//         return p;
+//     }
+//     else if (p == FINGERPRINT_NOTFOUND)
+//     {
+//         lcd.clear();
+//         lcd.print("User not recognised");
+//         return p;
+//     }
+//     else
+//     {
+//         Serial.println("Unknown error");
+//         return p;
+//     }
+
+//     // found a match!
+//     Serial.print("Found ID #");
+//     Serial.print(finger.fingerID);
+//     Serial.print(" with confidence of ");
+//     Serial.println(finger.confidence);
+
+//     return finger.fingerID;
+// }
+
+int getFingerprintIDez()
+{
+  uint8_t p = finger.getImage();
+  if (p != FINGERPRINT_OK)
+    return -1;
+
+  p = finger.image2Tz();
+  if (p != FINGERPRINT_OK)
+    return -1;
+
+  p = finger.fingerFastSearch();
+  if (p != FINGERPRINT_OK)
+    return -1;
+
+  // found a match!
+  Serial.print("Found ID #");
+  Serial.print(finger.fingerID);
+  Serial.print(" with confidence of ");
+  Serial.println(finger.confidence);
+  return finger.fingerID;
+}
+
+void getUserData()
+{
+    // take the fingerprint
+    int userID = getFingerprintIDez();
+    delay(2000);
+    lcd.clear();
+    lcd.print("You are user #: ");
+    lcd.print(userID);
+    // send a get request to the server for anyone with that ID and get all the data in the ID row.
+}
+
+uint8_t deleteFingerprint(uint8_t id)
 {
     uint8_t p = -1;
-    while (p != FINGERPRINT_OK)
-    {
-        uint8_t p = finger.getImage();
-        switch (p)
-        {
-        case FINGERPRINT_OK:
-            Serial.println("Image taken");
-            break;
-        case FINGERPRINT_NOFINGER:
-            Serial.println("No finger detected");
-            return p;
-        case FINGERPRINT_PACKETRECIEVEERR:
-            Serial.println("Communication error");
-            return p;
-        case FINGERPRINT_IMAGEFAIL:
-            Serial.println("Imaging error");
-            return p;
-        default:
-            Serial.println("Unknown error");
-            return p;
-        }
-    }
-    // OK success!
 
-    p = finger.image2Tz();
-    switch (p)
-    {
-    case FINGERPRINT_OK:
-        Serial.println("Image converted");
-        break;
-    case FINGERPRINT_IMAGEMESS:
-        Serial.println("Image too messy");
-        return p;
-    case FINGERPRINT_PACKETRECIEVEERR:
-        Serial.println("Communication error");
-        return p;
-    case FINGERPRINT_FEATUREFAIL:
-        Serial.println("Could not find fingerprint features");
-        return p;
-    case FINGERPRINT_INVALIDIMAGE:
-        Serial.println("Could not find fingerprint features");
-        return p;
-    default:
-        Serial.println("Unknown error");
-        return p;
-    }
+    p = finger.deleteModel(id);
 
-    // OK converted!
-    p = finger.fingerSearch();
     if (p == FINGERPRINT_OK)
     {
-        Serial.println("Found a print match!");
+        Serial.println("Deleted!");
     }
     else if (p == FINGERPRINT_PACKETRECIEVEERR)
     {
         Serial.println("Communication error");
         return p;
     }
-    else if (p == FINGERPRINT_NOTFOUND)
+    else if (p == FINGERPRINT_BADLOCATION)
     {
-        lcd.clear();
-        lcd.print("User not recognised");
+        Serial.println("Could not delete in that location");
+        return p;
+    }
+    else if (p == FINGERPRINT_FLASHERR)
+    {
+        Serial.println("Error writing to flash");
         return p;
     }
     else
     {
-        Serial.println("Unknown error");
+        Serial.print("Unknown error: 0x");
+        Serial.println(p, HEX);
         return p;
     }
-
-    // found a match!
-    Serial.print("Found ID #");
-    Serial.print(finger.fingerID);
-    Serial.print(" with confidence of ");
-    Serial.println(finger.confidence);
-
-    return finger.fingerID;
 }
 
-void getUserData()
+// Connecting to WiFi
+void connectWiFi()
 {
-    // take the fingerprint
-    int userID = getFingerprintID();
     lcd.clear();
-    lcd.print("You are user #: ");
-    lcd.print(userID);
-    // send a get request to the server for anyone with that ID and get all the data in the ID row.
+    lcd.setCursor(0, 0);
+    Serial.print("Connecting to WiFi...       ");
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, password);
+
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+        Serial.print(".");
+    }
+
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+    lcd.setCursor(0, 0);
+    lcd.print("WiFi connected          ");
+    lcd.setCursor(0, 1);
+    lcd.print("IP:");
+    lcd.setCursor(4, 1);
+    lcd.print(WiFi.localIP());
+
+    delay(1500);
 }
+
+
+// send fingerprint ID to the website
+void sendFingerprintID(int finger){
+    // code to send fingerprint ID to database here
+}
+
