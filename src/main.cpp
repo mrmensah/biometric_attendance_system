@@ -17,9 +17,11 @@ void setup()
   lcd.print("Hello Welcome");
 
   //Reading from EEPROM
-  var.id = EEPROM.read(0);
+  // var.id = EEPROM.read(0);
 
   Serial.begin(9600);
+  //Setting timeout for the serial
+  Serial.setTimeout(var.timeOutVal);
   delay(100);
   Serial.println("\n\nAdafruit Fingerprint sensor enrollment");
 
@@ -65,7 +67,7 @@ void setup()
 
   if (finger.templateCount == 0)
   {
-    Serial.print("Sensor doesn't contain any fingerprint data. Please run the 'enroll' example.");
+    Serial.print("Sensor doesn't contain any fingerprint data.");
   }
   else
   {
@@ -73,6 +75,7 @@ void setup()
     Serial.print("Sensor contains ");
     Serial.print(finger.templateCount);
     Serial.println(" templates");
+    // var.id = finger.templateCount;
   }
 }
 
@@ -88,7 +91,8 @@ void loop()
     Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
     // var.id = readnumber();
     // readnumber();
-    var.id += 1;
+    finger.getTemplateCount();
+    var.id = finger.templateCount + 1;
 
     if (var.id == 0)
     { // ID #0 not allowed, try again!
@@ -100,7 +104,6 @@ void loop()
 
     while (!getFingerprintEnroll())
       ;
-    EEPROM.write(0, var.id);
     lcd.clear();
     lcd.print("User ");
     lcd.print(var.id);
@@ -122,6 +125,9 @@ void loop()
   if (auth == HIGH)
   {
     getUserData();
+    // finger.emptyDatabase();
+    // finger.getTemplateCount();
+   
   }
 
   if (auth == HIGH && reg == HIGH)
