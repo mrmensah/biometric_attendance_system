@@ -101,7 +101,7 @@ void loop()
     lcd.clear();
     lcd.print("Enrolling ID #: ");
     lcd.print(var.id);
-
+    delay(2500);
     while (!getFingerprintEnroll())
       ;
     lcd.clear();
