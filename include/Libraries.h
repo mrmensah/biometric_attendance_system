@@ -5,6 +5,10 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 
+#include <ESP8266WebServer.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClient.h> 
+
 #ifndef PROTOTYPES_H
 #define PROTOTYPES_H
 #endif

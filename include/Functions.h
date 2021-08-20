@@ -427,3 +427,64 @@ uint8_t getFingerprintID()
 
     return finger.fingerID;
 }
+
+void ChecktoAddID(){
+ 
+  HTTPClient http;    //Declare object of class HTTPClient
+  //Post Data
+  postData = "Get_Fingerid=get_id"; // Add the Fingerprint ID to the Post array in order to send it
+  // Post methode
+ 
+  http.begin(link); //initiate HTTP request, put your Website URL or Your Computer IP 
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");    //Specify content-type header
+  
+  int httpCode = http.POST(postData);   //Send the request
+  String payload = http.getString();    //Get the response payload
+ 
+  if (payload.substring(0, 6) == "add-id") {
+    String add_id = payload.substring(6);
+    Serial.println(add_id);
+    id = add_id.toInt();
+    getFingerprintEnroll();
+  }
+  http.end();  //Close connection
+}
+
+void SendFingerprintID( int finger ){
+  
+  HTTPClient http;    //Declare object of class HTTPClient
+  //Post Data
+  postData = "FingerID=" + String(finger); // Add the Fingerprint ID to the Post array in order to send it
+  // Post methode
+ 
+  http.begin(link); //initiate HTTP request, put your Website URL or Your Computer IP 
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");    //Specify content-type header
+  
+  int httpCode = http.POST(postData);   //Send the request
+  String payload = http.getString();    //Get the response payload
+  
+  Serial.println(httpCode);   //Print HTTP return code
+  Serial.println(payload);    //Print request response payload
+  Serial.println(postData);   //Post Data
+  Serial.println(finger);     //Print fingerprint ID
+ 
+  if (payload.substring(0, 5) == "login") {
+    String user_name = payload.substring(5);
+    Serial.print("Welcome ");
+    Serial.println(user_name);          
+    lcd.print("Welcome ");
+    lcd.print(user_name);
+    
+  }
+  else if (payload.substring(0, 6) == "logout") {
+    String user_name = payload.substring(6);
+    Serial.print("Goodbye ");
+    Serial.println(user_name);
+    display.print("Good Bye");
+    display.print(user_name);
+  }
+  delay(1000);
+  
+  postData = "";
+  http.end();  //Close connection
+}

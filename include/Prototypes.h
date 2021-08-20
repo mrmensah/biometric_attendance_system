@@ -13,3 +13,5 @@ int getFingerprintIDez();
 void getUserData();
 
 void connectWiFi();
+void SendFingerprintID( int finger );
+uint8_t getFingerprintID();
