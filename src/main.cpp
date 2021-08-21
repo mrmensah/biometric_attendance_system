@@ -4,7 +4,6 @@
 
 void setup()
 {
-  // put your setup code here, to run once:
   pinMode(RED_LED, OUTPUT);
   pinMode(GREEN_LED, OUTPUT);
   pinMode(BUZZER, OUTPUT);
@@ -27,6 +26,9 @@ void setup()
 
   // set the data rate for the sensor serial port
   finger.begin(57600);
+
+  // Initializing WiFi connection
+  connectWiFi();
 
   if (finger.verifyPassword())
   {
@@ -59,9 +61,6 @@ void setup()
   Serial.print(F("Baud rate: "));
   Serial.println(finger.baud_rate);
 
-  // Initializing WiFi connection
-  connectWiFi();
-
   // count fingerprints available
   finger.getTemplateCount();
 
@@ -75,27 +74,28 @@ void setup()
     Serial.print("Sensor contains ");
     Serial.print(finger.templateCount);
     Serial.println(" templates");
-    // var.id = finger.templateCount;
   }
 }
 
 void loop()
 {
   // Enroll new User
-  int reg = 0;
-  reg = digitalRead(REGISTER);
+  // Buttons setup
+  int reg =  digitalRead(REGISTER);
+  int auth = digitalRead(AUTHENTICATE);
+
+  // Registering new members
   if (reg == HIGH)
   {
-    // This function is responsible for registering new members
     Serial.println("Ready to enroll a fingerprint!");
-    Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
+    // Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
     // var.id = readnumber();
     // readnumber();
     finger.getTemplateCount();
-    var.id = finger.templateCount + 1;
+    var.id = finger.templateCount + 1; // Assigning the ID automatically
 
-    if (var.id == 0)
-    { // ID #0 not allowed, try again!
+    if (var.id == 0) // ID #0 not allowed, try again!
+    { 
       return;
     }
     lcd.clear();
@@ -112,24 +112,14 @@ void loop()
     successNotify(100, "Registered");
   }
 
-  // Get fingerprint ID
-
-  // Display fingerprint ID
-
-  // Add fingerprint ID to the Database
-
-  // Delete fingerprint ID from the Database
-
-  // getting user data
-  int auth = digitalRead(AUTHENTICATE);
+  
+  // Authenticating the user 
   if (auth == HIGH)
   {
     getUserData();
-    // finger.emptyDatabase();
-    // finger.getTemplateCount();
-   
   }
 
+  
   if (auth == HIGH && reg == HIGH)
   {
     Reset();

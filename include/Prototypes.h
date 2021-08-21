@@ -15,3 +15,7 @@ void getUserData();
 void connectWiFi();
 void SendFingerprintID( int finger );
 uint8_t getFingerprintID();
+uint8_t deleteFingerprint( int id);
+void ChecktoDeleteID();
+void confirmAdding();
+void DisplayFingerprintID();
