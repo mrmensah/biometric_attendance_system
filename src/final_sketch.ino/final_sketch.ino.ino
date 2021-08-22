@@ -71,9 +71,12 @@ FUNCTION DEFINITIONS
 void connectWiFi() {
   lcd.clear();
   lcd.setCursor(0, 0);
-  Serial.print("Connecting to WiFi...       ");
-  Serial.print("Connecting to ");
+  lcd.print("Connecting to...");
+  lcd.setCursor(0, 1);
+  lcd.print(ssid);
+  Serial.print("Connecting to WiFi: ");
   Serial.println(ssid);
+  
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -86,13 +89,13 @@ void connectWiFi() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   lcd.setCursor(0, 0);
-  lcd.print("WiFi connected          ");
+  lcd.print("Wi-Fi connected...");
   lcd.setCursor(0, 1);
-  lcd.print("IP:");
-  lcd.setCursor(4, 1);
+  lcd.print("@ ");
+  lcd.setCursor(1, 1);
   lcd.print(WiFi.localIP());
 
-  delay(1500);
+  delay(2500);
 }
 
 // Function to capture new fingerprint 
@@ -470,10 +473,12 @@ void setup() {
   lcd.begin();
   lcd.backlight();  // turning on the lcd backlight
   lcd.print("Hello Welcome");
+  lcd.setCursor(0, 1);
+  lcd.print("Setting up...");
 
   Serial.begin(9600);
-  delay(100);
-  Serial.println("\n\nAdafruit Fingerprint sensor enrollment");
+  delay(1000);
+  Serial.println("\nAdafruit Fingerprint sensor enrollment");
 
   // set the data rate for the sensor serial port
   finger.begin(57600);
