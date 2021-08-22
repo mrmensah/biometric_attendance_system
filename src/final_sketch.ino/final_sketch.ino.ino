@@ -38,48 +38,41 @@ struct Variables {
   int failureBuzz{ 1000 };
 };
 
-String postData;                                                   // post array that will be send to the website
-String link = "http://192.168.19.23:8080/biometric/authenticate.php";  //computer IP or the server domain
-int FingerID = 0;                                                  // The Fingerprint ID from the scanner
+String postData;                                                       // post array that will be send to the website
+String link = "http://192.168.205.23:8080/biometric/authenticate.php";  //computer IP or the server domain
+int FingerID = 0;                                                      // The Fingerprint ID from the scanner
 uint8_t id;
 
+// Setting up WiFi for pushing data
+const char *ssid = "Mensah's Nokia";
+const char *password = "lucille1";
 
 /*******************************
 FUNCTION PROTOTYPES
 *******************************/
 uint8_t getFingerprintEnroll();
 uint8_t readnumber(void);
-void numberOfFingers();
-void getFingerprintIDRecog();
 void successNotify(int, String);
 void failNotity(int, String);
-void printHex(int num, int precision);
 void Reset();
-uint8_t getFingerprintID();
-int getFingerprintIDez();
-void getUserData();
-
 void connectWiFi();
-String SendFingerprintID(int finger);
 void authenticate(int);
 uint8_t getFingerprintID();
+void Register();
 
 /*******************************
 FUNCTION DEFINITIONS
 *******************************/
-//Structs usage
-Variables var;
-//LCD definition
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-// Setting up the fingerprint sensor
-#if (defined(__AVR__) || defined(ESP8266)) && !defined(__AVR_ATmega2560__)
+
+Variables var;                       //Structs usage
+LiquidCrystal_I2C lcd(0x27, 16, 2);  //LCD definition
+
+#if (defined(__AVR__) || defined(ESP8266)) && !defined(__AVR_ATmega2560__)  // Setting up the fingerprint sensor
 SoftwareSerial mySerial(2, 3);
 #endif
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 
-// Setting up WiFi for pushing data
-const char *ssid = "AKORA-ING-DKB";
-const char *password = "deekaybee";
+
 WiFiClient wifiClient;
 HTTPClient http;
 
@@ -285,61 +278,11 @@ void failNotity(int buzz, String message) {
 
 void Reset() {
   finger.emptyDatabase();
-  lcd.print("Reset Complete");
-}
-
-void numberOfFingers() {
-  finger.getTemplateCount();
-
-  if (finger.templateCount == 0) {
-    lcd.clear();
-    lcd.print("Sensor doesn't contain any fingerprint data. Please run the 'enroll' example.");
-  } else {
-    lcd.clear();
-    lcd.println("Waiting for valid finger...");
-    lcd.clear();
-    lcd.print("Sensor contains ");
-    lcd.setCursor(0, 1);
-    lcd.print(finger.templateCount);
-    lcd.println(" templates");
-  }
-}
-
-int getFingerprintIDez() {
-  uint8_t p = finger.getImage();
-  if (p != FINGERPRINT_OK)
-    return -1;
-
-  p = finger.image2Tz();
-  if (p != FINGERPRINT_OK)
-    return -1;
-
-  p = finger.fingerFastSearch();
-  if (p != FINGERPRINT_OK)
-    return -1;
-
-  // found a match!
-  Serial.print("Found ID #");
-  Serial.print(finger.fingerID);
-  Serial.print(" with confidence of ");
-  Serial.println(finger.confidence);
-  return finger.fingerID;
-}
-
-void getUserData() {
-  int x = 0;
-  while (x == 0) {
-    // take the fingerprint
-    int userID = getFingerprintIDez();
-    x = userID;
-    // delay(2000);
-    lcd.clear();
-    lcd.print("You're user #: ");
-    lcd.print(userID);
-  }
-
-  // send a get request to the server for anyone with that ID and get all the data in the ID row.
-  String user_name = SendFingerprintID(x);
+  lcd.clear();
+  lcd.print("Reset");
+  lcd.setCursor(0, 1);
+  lcd.print(" Complete");
+  Serial.println("Reset Complete");
 }
 
 // Connecting to WiFi
@@ -379,16 +322,16 @@ uint8_t getFingerprintID() {
       break;
     case FINGERPRINT_NOFINGER:
       Serial.println("No finger detected");
-      return p;
+      return 0;
     case FINGERPRINT_PACKETRECIEVEERR:
       Serial.println("Communication error");
-      return p;
+      return 0;
     case FINGERPRINT_IMAGEFAIL:
       Serial.println("Imaging error");
-      return p;
+      return 0;
     default:
       Serial.println("Unknown error");
-      return p;
+      return 0;
   }
 
   // OK success!
@@ -400,19 +343,19 @@ uint8_t getFingerprintID() {
       break;
     case FINGERPRINT_IMAGEMESS:
       Serial.println("Image too messy");
-      return p;
+      return 0;
     case FINGERPRINT_PACKETRECIEVEERR:
       Serial.println("Communication error");
-      return p;
+      return 0;
     case FINGERPRINT_FEATUREFAIL:
       Serial.println("Could not find fingerprint features");
-      return p;
+      return 0;
     case FINGERPRINT_INVALIDIMAGE:
       Serial.println("Could not find fingerprint features");
-      return p;
+      return 0;
     default:
       Serial.println("Unknown error");
-      return p;
+      return 0;
   }
 
   // OK converted!
@@ -421,13 +364,13 @@ uint8_t getFingerprintID() {
     Serial.println("Found a print match!");
   } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
     Serial.println("Communication error");
-    return p;
+    return 0;
   } else if (p == FINGERPRINT_NOTFOUND) {
     Serial.println("Did not find a match");
-    return p;
+    return 0;
   } else {
     Serial.println("Unknown error");
-    return p;
+    return 0;
   }
 
   // found a match!
@@ -436,9 +379,11 @@ uint8_t getFingerprintID() {
   Serial.print(" with confidence of ");
   Serial.println(finger.confidence);
 
+  Serial.print("Finger ID: ");
+  Serial.println(finger.fingerID);
+
   return finger.fingerID;
 }
-
 
 void authenticate(int fingerID) {
   Serial.print("\nAuthenticating FingerID: ");
@@ -455,156 +400,129 @@ void authenticate(int fingerID) {
   int httpCode = http.POST(postData);  //Send the request
   String payload = http.getString();   //Get the response payload
 
+  Serial.println("Post Data: " + postData);             //Post Data
   Serial.println("Reponse Code: " + String(httpCode));  //Print HTTP return code
-  Serial.println("Payload :" + payload);   //Print request response payload
-  Serial.println("Post Data: " + postData);  //Post Data
+  Serial.println("Payload :" + payload);                //Print request response payload
 
   String user_name = payload.substring(5);
   Serial.print("Welcome ");
   Serial.println(user_name);
+  lcd.clear();
   lcd.print("Welcome ");
-  lcd.print(user_name);
-  
-  delay(750);
+  lcd.setCursor(4, 1);
+  lcd.print(user_name); 
 
   postData = "";
+
+  delay(250);
+
   http.end();  //Close connection
+}
+
+void Register() {
+  Serial.println("Ready to enroll a fingerprint!");
+  Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
+  // var.id = readnumber();
+  // readnumber();
+  finger.getTemplateCount();
+  var.id = finger.templateCount + 1;
+
+  if (var.id == 0) {  // ID #0 not allowed, try again!
+    return;
+  }
+  lcd.clear();
+  lcd.print("Enrolling ID #: ");
+  lcd.print(var.id);
+  delay(2500);
+  while (!getFingerprintEnroll())
+    ;
+  lcd.clear();
+  lcd.print("User ");
+  lcd.print(var.id);
+  lcd.print(" is registered");
+  delay(3000);
+  successNotify(100, "Registered");
 }
 
 void setup() {
   // put your setup code here, to run once:
-  // pinMode(RED_LED, OUTPUT);
-  // pinMode(GREEN_LED, OUTPUT);
-  // pinMode(BUZZER, OUTPUT);
-  // pinMode(REGISTER, INPUT);
-  // pinMode(AUTHENTICATE, INPUT);
+  pinMode(RED_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
+  pinMode(REGISTER, INPUT);
+  pinMode(AUTHENTICATE, INPUT);
 
   //initialize the LCD
-  // lcd.begin();
-  // lcd.backlight(); // turning on the lcd backlight
-  // lcd.print("Hello Welcome");
-
-  //Reading from EEPROM
-  // var.id = EEPROM.read(0);
+  lcd.begin();
+  lcd.backlight();  // turning on the lcd backlight
+  lcd.print("Hello Welcome");
 
   Serial.begin(9600);
-  //Setting timeout for the serial
-  // Serial.setTimeout(var.timeOutVal);
-  // delay(100);
-  // Serial.println("\n\nAdafruit Fingerprint sensor enrollment");
+  delay(100);
+  Serial.println("\n\nAdafruit Fingerprint sensor enrollment");
 
   // set the data rate for the sensor serial port
-  // finger.begin(57600);
-
-  // if (finger.verifyPassword())
-  // {
-  //   Serial.println("Found fingerprint sensor!");
-  // }
-  // else
-  // {
-  //   Serial.println("Did not find fingerprint sensor :(");
-  //   while (1)
-  //   {
-  //     delay(1);
-  //   }
-  // }
+  finger.begin(57600);
+  if (finger.verifyPassword()) {
+    Serial.println("Found fingerprint sensor!");
+  } else {
+    Serial.println("Did not find fingerprint sensor :(");
+    while (1) {
+      delay(1);
+    }
+  }
 
   // Get fingerprint sensor details
-  // Serial.println(F("Reading sensor parameters"));
-  // finger.getParameters();
-  // Serial.print(F("Status: 0x"));
-  // Serial.println(finger.status_reg, HEX);
-  // Serial.print(F("Sys ID: 0x"));
-  // Serial.println(finger.system_id, HEX);
-  // Serial.print(F("Capacity: "));
-  // Serial.println(finger.capacity);
-  // Serial.print(F("Security level: "));
-  // Serial.println(finger.security_level);
-  // Serial.print(F("Device address: "));
-  // Serial.println(finger.device_addr, HEX);
-  // Serial.print(F("Packet len: "));
-  // Serial.println(finger.packet_len);
-  // Serial.print(F("Baud rate: "));
-  // Serial.println(finger.baud_rate);
+  Serial.println(F("Reading sensor parameters"));
+  finger.getParameters();
+  Serial.print(F("Status: 0x"));
+  Serial.println(finger.status_reg, HEX);
+  Serial.print(F("Sys ID: 0x"));
+  Serial.println(finger.system_id, HEX);
+  Serial.print(F("Capacity: "));
+  Serial.println(finger.capacity);
+  Serial.print(F("Security level: "));
+  Serial.println(finger.security_level);
+  Serial.print(F("Device address: "));
+  Serial.println(finger.device_addr, HEX);
+  Serial.print(F("Packet len: "));
+  Serial.println(finger.packet_len);
+  Serial.print(F("Baud rate: "));
+  Serial.println(finger.baud_rate);
 
   // Initializing WiFi connection
   connectWiFi();
 
   // count fingerprints available
-  // finger.getTemplateCount();
-
-  // if (finger.templateCount == 0)
-  // {
-  //   Serial.print("Sensor doesn't contain any fingerprint data.");
-  // }
-  // else
-  // {
-  //   Serial.println("Waiting for valid finger...");
-  //   Serial.print("Sensor contains ");
-  //   Serial.print(finger.templateCount);
-  //   Serial.println(" templates");
-  //   // var.id = finger.templateCount;
-  // }
+  finger.getTemplateCount();
+  if (finger.templateCount == 0) {
+    Serial.print("Sensor doesn't contain any fingerprint data.");
+  } else {
+    Serial.println("Waiting for valid finger...");
+    Serial.print("Sensor contains ");
+    Serial.print(finger.templateCount);
+    Serial.println(" templates");
+  }
 }
 
 void loop() {
+  delay(1000);
+
   // Enroll new User
-  // int reg = 0;
-  // reg = digitalRead(REGISTER);
-  String option = "";
-  if (Serial.available() > 0) {
-    option = Serial.readString();
+  int reg = digitalRead(REGISTER);
+  int auth = digitalRead(AUTHENTICATE);
+  if (reg == HIGH) {
+    // This function is responsible for registering new members
+    Register();
+  }
 
-    String id = option.substring(1, option.length()-1); // Extract finger ID from entered string
-    option = option[0]; // Get option r->register; a->authenticate
+  // getting user data
+  if (auth == HIGH) {
+    int thisID = getFingerprintID();
+    if (thisID > 0) authenticate(thisID);
+  }
 
-    if (option.equals("R") || option.equals("r")) {
-      // This function is responsible for registering new members
-      Serial.println("Ready to enroll a fingerprint!");
-      Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
-      // var.id = readnumber();
-      // readnumber();
-      // finger.getTemplateCount();
-      // var.id = finger.templateCount + 1;
-
-      // if (var.id == 0) {  // ID #0 not allowed, try again!
-      //   return;
-      // }
-      // lcd.clear();
-      // lcd.print("Enrolling ID #: ");
-      // lcd.print(var.id);
-      // delay(2500);
-      // while (!getFingerprintEnroll());
-      // lcd.clear();
-      // lcd.print("User ");
-      // lcd.print(var.id);
-      // lcd.print(" is registered");
-      // delay(3000);
-      // successNotify(100, "Registered");
-    } else {
-      // Get fingerprint ID
-
-    // Display fingerprint ID
-
-    // Add fingerprint ID to the Database
-
-    // Delete fingerprint ID from the Database
-
-    // getting user data
-    // int auth = digitalRead(AUTHENTICATE);
-    if (option.equals("A") || option.equals("a")) {
-      
-      // getUserData();
-      // SendFingerprintID(100);
-      authenticate(id.toInt());
-      // finger.emptyDatabase();
-      // finger.getTemplateCount();
-    }
-
-    // if (auth == HIGH && reg == HIGH)
-    // {
-    //   Reset();
-    // }
-    }
+  if (auth == HIGH && reg == HIGH) {
+    Reset();
   }
 }
