@@ -423,14 +423,12 @@ void authenticate(int fingerID) {
     lcd.print(user_name);
   } else {
     lcd.clear();
-    lcd.print("No match");
-    lcd.setCursor(0, 1);
-    lcd.print(" found");
+    lcd.print("User not found");
   }
 
   postData = "";
 
-  delay(250);
+  delay(100);
 
   http.end();  //Close connection
 }
@@ -537,15 +535,15 @@ void loop() {
   // Authenticate a registered user
   if (auth == HIGH) {
     int thisID = getFingerprintID();
-    if (thisID > 0) {
-      authenticate(thisID);
-      delay(2500);
-    } else {
+
+    if (thisID > 0) authenticate(thisID);
+    else {
       lcd.clear();
       lcd.print("No match found");
       lcd.setCursor(0, 1);
       lcd.print("Try again");
-      delay(2500);
     }
+    
+    delay(2500);
   }
 }
