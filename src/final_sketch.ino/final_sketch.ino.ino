@@ -31,10 +31,10 @@ struct Variables {
 };
 
 String postData;                                                       // post array that will be send to the website
-String link = "http://192.168.137.1:8080/biometric/authenticate.php";  //computer IP or the server domain
+String host = "http://192.168.24.23:8080/biometric";  //computer IP or the server domain
 
 // Setting up WiFi for pushing data
-const char *ssid = "AKORA-ING-DKB";
+const char *ssid = "AkoraIngDKB";
 const char *password = "deekaybee";
 
 Variables var;                       //Structs usage
@@ -404,7 +404,7 @@ void authenticate(int fingerID) {
   postData = "auth=" + String(fingerID);  // Add the Fingerprint ID to the Post array in order to send it
   // Post methode
 
-  http.begin(wifiClient, link);                                         //initiate HTTP request, put your Website URL or Your Computer IP
+  http.begin(wifiClient, host+"/authenticate.php");                                         //initiate HTTP request, put your Website URL or Your Computer IP
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");  //Specify content-type header
 
   int httpCode = http.POST(postData);  //Send the request
@@ -441,15 +441,28 @@ void reset() {
   lcd.setCursor(0, 1);
   lcd.print(" database");
 
-  finger.emptyDatabase();
+  HTTPClient http;  //Declare object of class HTTPClient
+  //Post Data
+  postData = "reset=1";  // Add the Fingerprint ID to the Post array in order to send it
+  // Post methode
 
-  delay(1000);
-  lcd.clear();
-  lcd.print("Reset");
-  lcd.setCursor(0, 1);
-  lcd.print(" Complete");
+  http.begin(wifiClient, host+"/reset.php");                                         //initiate HTTP request, put your Website URL or Your Computer IP
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");  //Specify content-type header
 
-  Serial.println("Reset Complete");
+  int httpCode = http.POST(postData);  //Send the request
+
+  if (httpCode == 200) {
+    finger.emptyDatabase();
+
+    delay(1000);
+    lcd.clear();
+    lcd.print("Reset");
+    lcd.setCursor(0, 1);
+    lcd.print(" Complete");
+    delay(2500);
+
+    Serial.println("\nReset Complete");
+  }
 }
 
 // Display usage instructions
@@ -516,7 +529,7 @@ void setup() {
 void loop() {
   // Display operation instructions
   promptUser();
-  delay(1000);
+  delay(750);
 
   // Read button states
   int reg = digitalRead(REGISTER);
