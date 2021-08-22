@@ -525,25 +525,25 @@ void loop() {
   // Clear fingerprint database if both are pressed simultaneously
   if (auth == HIGH && reg == HIGH) {
     reset();
-  }
-
-  if (reg == HIGH) {
-    // Register new member
-    registerUser();
-  }
-
-  // Authenticate a registered user
-  if (auth == HIGH) {
-    int thisID = getFingerprintID();
-
-    if (thisID > 0) authenticate(thisID);
-    else {
-      lcd.clear();
-      lcd.print("No match found");
-      lcd.setCursor(0, 1);
-      lcd.print("Try again");
+  } else {
+    if (reg == HIGH) {
+      // Register new member
+      registerUser();
     }
-    
-    delay(2500);
-  }
+
+    // Authenticate a registered user
+    if (auth == HIGH) {
+      int thisID = getFingerprintID();
+
+      if (thisID > 0) authenticate(thisID);
+      else {
+        lcd.clear();
+        lcd.print("No match found");
+        lcd.setCursor(0, 1);
+        lcd.print("Try again");
+      }
+
+      delay(2500);
+    }
+  }  
 }
