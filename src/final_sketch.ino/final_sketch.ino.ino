@@ -372,10 +372,6 @@ uint8_t getFingerprintID() {
     return 0;
   } else if (p == FINGERPRINT_NOTFOUND) {
     Serial.println("Did not find a match");
-    lcd.clear();
-    lcd.print("No match");
-    lcd.setCursor(0, 1);
-    lcd.print(" found");
     return 0;
   } else {
     Serial.println("Unknown error");
@@ -538,6 +534,12 @@ void loop() {
     int thisID = getFingerprintID();
     if (thisID > 0) {
       authenticate(thisID);
+      delay(2500);
+    } else {
+      lcd.clear();
+      lcd.print("No match found");
+      lcd.setCursor(0, 1);
+      lcd.print("Try again");
       delay(2500);
     }
   }
