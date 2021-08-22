@@ -262,25 +262,26 @@ uint8_t getFingerprintEnroll() {
 // Function to save fingerprint and generate finger ID
 void registerUser() {
   Serial.println("Ready to enroll a fingerprint!");
-  Serial.println("Please type in the ID # (from 1 to 127) you want to save this finger as...");
-  // var.id = readnumber();
-  // readnumber();
+
   finger.getTemplateCount();
   var.id = finger.templateCount + 1;
 
   if (var.id == 0) {  // ID #0 not allowed, try again!
     return;
   }
+
   lcd.clear();
-  lcd.print("Enrolling ID #: ");
+  lcd.print("Enrolling user");
+  lcd.setCursor(0, 1);
+  lcd.print(" with ID #");
   lcd.print(var.id);
-  delay(2500);
-  while (!getFingerprintEnroll())
-    ;
+  delay(500);
+  while (!getFingerprintEnroll());
   lcd.clear();
-  lcd.print("User ");
+  lcd.print("New User");
+  lcd.setCursor(0, 1);
+  lcd.print("ID: #");
   lcd.print(var.id);
-  lcd.print(" is registered");
   delay(3000);
   successNotify(100, "Registered");
 }
@@ -480,13 +481,12 @@ void setup() {
 
   // set the data rate for the sensor serial port
   finger.begin(57600);
+  while (!finger.verifyPassword()) {
+    Serial.println("Searching for fingerprint sensor...");
+  }
+
   if (finger.verifyPassword()) {
     Serial.println("Found fingerprint sensor!");
-  } else {
-    Serial.println("Did not find fingerprint sensor :(");
-    while (!finger.verifyPassword()) {
-      delay(1);
-    }
   }
 
   // Get fingerprint sensor details
