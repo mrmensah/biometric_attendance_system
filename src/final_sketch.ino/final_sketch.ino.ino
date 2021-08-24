@@ -31,7 +31,7 @@ struct Variables {
 };
 
 String postData;                                                       // post array that will be send to the website
-String host = "http://192.168.24.23:8080/biometric";  //computer IP or the server domain
+String host = "http://192.168.134.23:8080/biometric";  //computer IP or the server domain
 
 // Setting up WiFi for pushing data
 const char *ssid = "AkoraIngDKB";
@@ -228,13 +228,16 @@ uint8_t getFingerprintEnroll() {
     Serial.println("Prints matched!");
   } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
     Serial.println("Communication error");
-    return p;
+    return false;
   } else if (p == FINGERPRINT_ENROLLMISMATCH) {
     Serial.println("Fingerprints did not match");
-    return p;
+    lcd.clear();
+    lcd.print("Did not match");
+    delay(2000);
+    return false;
   } else {
     Serial.println("Unknown error");
-    return p;
+    return false;
   }
 
   Serial.print("ID ");
@@ -242,18 +245,26 @@ uint8_t getFingerprintEnroll() {
   p = finger.storeModel(var.id);
   if (p == FINGERPRINT_OK) {
     Serial.println("Stored!");
+    lcd.clear();
+    lcd.print("New User");
+    lcd.setCursor(0, 1);
+    lcd.print("ID: #");
+    lcd.print(var.id);
+    delay(3000);
+    successNotify(100, "Registered");
+
   } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
     Serial.println("Communication error");
-    return p;
+    return false;
   } else if (p == FINGERPRINT_BADLOCATION) {
     Serial.println("Could not store in that location");
-    return p;
+    return false;
   } else if (p == FINGERPRINT_FLASHERR) {
     Serial.println("Error writing to flash");
-    return p;
+    return false;
   } else {
     Serial.println("Unknown error");
-    return p;
+    return false;
   }
 
   return true;
@@ -277,13 +288,7 @@ void registerUser() {
   lcd.print(var.id);
   delay(500);
   while (!getFingerprintEnroll());
-  lcd.clear();
-  lcd.print("New User");
-  lcd.setCursor(0, 1);
-  lcd.print("ID: #");
-  lcd.print(var.id);
-  delay(3000);
-  successNotify(100, "Registered");
+  
 }
 
 // Function to notify of successes
@@ -415,13 +420,13 @@ void authenticate(int fingerID) {
   Serial.println("Payload :" + payload);                //Print request response payload
 
   if (httpCode == 200) {
-    String user_name = payload.substring(5);
+    // String user_name = payload.substring(5);
     Serial.print("Welcome ");
-    Serial.println(user_name);
+    Serial.println(payload);
     lcd.clear();
     lcd.print("Welcome ");
-    lcd.setCursor(4, 1);
-    lcd.print(user_name);
+    lcd.setCursor(0, 1);
+    lcd.print(payload);
   } else {
     lcd.clear();
     lcd.print("User not found");
